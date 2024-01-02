@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <vector>
 
 int main()
 {
@@ -17,11 +18,10 @@ int main()
     //world conditions
     float speed = 0;
     float Initalspeed = 0.0f;
-    float acceleration = 400.0f;
-    float deceleration = 200.0f;
+    float acceleration = 500.0f;
+    float friction= .99f;
     float maxSpeed = 600.0f;
     float rotationSpeed = 200.0f;
-    float bulletSpeed = 800.0f;
 
     //clocks
     sf::Clock clock;
@@ -29,8 +29,11 @@ int main()
     
     //bullet
     float bulletDelay = 0.5f; // Bullet delay in seconds
-
-   
+    std::vector<sf::CircleShape> bullets;
+    std::vector<float>bulletAngles;
+    float bulletSpeed = 900.0f;
+    int bulletCount = 0; 
+    
     while (window.isOpen())
     {
         sf::Time deltaTime = clock.restart();
@@ -59,13 +62,11 @@ int main()
         }
         else
         {
-            if (speed > 0)
-                speed -= deceleration * seconds;
-            else if (speed < 0)
-                speed += deceleration * seconds;
-
-            if (std::abs(speed) < deceleration * seconds)
-                speed = 0;
+             speed *= friction;
+            float rad = spaceship.getRotation() * 3.14159265f / 180.f;
+            float accelX = std::cos(rad) *speed;
+            float accelY = std::sin(rad) *speed;
+             spaceship.move(accelX * seconds, accelY * seconds);
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
@@ -76,9 +77,54 @@ int main()
         }
 
         // Shooting logic
+      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && bulletClock.getElapsedTime() > sf::seconds(bulletDelay)) {
+            sf::CircleShape bullet(5);
+            bullet.setFillColor(sf::Color::White);
 
+            // Set the initial position of the bullet to the tip of the ship
+            sf::Vector2f shipTipPosition = spaceship.getTransform().transformPoint(spaceship.getPoint(1));
+            bullet.setPosition(shipTipPosition);
+
+            bullets.push_back(bullet);
+            bulletAngles.push_back(spaceship.getRotation());
+
+                // Reset the bullet count when it reaches the end of the vector
+                if (++bulletCount >= bullets.size()) 
+                 bulletCount = 0;
+            
+
+            // Reset the bullet clock
+            bulletClock.restart();
+        }
+
+      
         window.clear();
         window.draw(spaceship);
+        
+        //bullet rendering
+        for(sf::CircleShape i : bullets){ 
+            window.draw(i);
+        }
+        auto bulletIter = bullets.begin();
+        auto angleIter = bulletAngles.begin();
+
+        for (auto iterator = bullets.begin(); iterator != bullets.end();) {
+        float rad = bulletAngles[iterator - bullets.begin()] * 3.14159265f / 180.f;
+        float accelX = std::cos(rad) * bulletSpeed;
+        float accelY = std::sin(rad) * bulletSpeed;
+        iterator->move(accelX * seconds, accelY * seconds);
+
+        // Check if the bullet is out of bounds
+        if (iterator->getPosition().x < 0 || iterator->getPosition().x > 1920) {
+        iterator = bullets.erase(iterator);
+        bulletAngles.erase(bulletAngles.begin() + (iterator - bullets.begin()));
+        } else {
+        ++iterator;
+        }//end bullet rendering
+}
+
+
         window.display();
     }
+    return 0;
 }
