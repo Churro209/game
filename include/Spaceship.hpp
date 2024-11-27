@@ -14,6 +14,8 @@ public:
 
     sf::ConvexShape& getShape();
     sf::FloatRect getGlobalBounds() const;
+    sf::Vector2f getTipPosition() const; // Returns the tip position of the spaceship
+    float getRotation() const;          // Returns the current rotation angle of the spaceship
 
 private:
     sf::ConvexShape shape;
