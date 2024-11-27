@@ -1,147 +1,174 @@
-        #include <SFML/Graphics.hpp>
-        #include <vector>
-        #include <cmath>
-        #include <iostream>
+#include <SFML/Graphics.hpp>
+#include "Bullet.hpp"
+#include "Asteroid.hpp"
+#include "Spaceship.hpp"
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
 
-        int main()
-        {
-        auto window = sf::RenderWindow{ { 1920u, 1080u }, "CMake SFML Project" };
-        window.setFramerateLimit(144);
-        //Space Ship
-        sf::ConvexShape spaceship;
-        spaceship.setPointCount(4);
-        spaceship.setPoint(0, sf::Vector2f(-10, 20));  // Top point
-        spaceship.setPoint(1, sf::Vector2f(40, 0));  // Bottom-right point
-        spaceship.setPoint(2, sf::Vector2f(-10,-20)); // Bottom-left point
-        spaceship.setPoint(3, sf::Vector2f(0, 0)); // Bottom-left point
-        spaceship.setFillColor(sf::Color::Red);
-        spaceship.setPosition(900, 500);
+constexpr unsigned int WINDOW_WIDTH = 1920;
+constexpr unsigned int WINDOW_HEIGHT = 1080;
 
+enum GameState {
+    PLAYING,
+    GAME_OVER
+};
 
-        //debug 
-        
-        //world conditions
-        float speed = 0;
-        float Initalspeed = 0.0f;
-        float acceleration = 500.0f;
-        float friction= .99f;
-        float maxSpeed = 600.0f;
-        float rotationSpeed = 200.0f;
+void resetGame(Spaceship& spaceship, std::vector<Bullet>& bullets, std::vector<Asteroid>& asteroids, const int maxAsteroids, const float asteroidSpeed) {
+    // Reset spaceship
+    spaceship.getShape().setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    spaceship.getShape().setRotation(0);
 
-        //clocks
-        sf::Clock clock;
-        sf::Clock bulletClock;
-        
-        //bullet
-        float bulletDelay = 0.5f; // Bullet delay in seconds
-        std::vector<sf::CircleShape> bullets;
-        std::vector<float>bulletAngles;
-        float bulletSpeed = 900.0f;
-        int bulletCount = 0; 
-        
-        while (window.isOpen())
-        {
-                spaceship.getRotation(); //debug
-                sf::Time deltaTime = clock.restart();
-                float seconds = deltaTime.asSeconds();
+    // Clear bullets and asteroids
+    bullets.clear();
+    asteroids.clear();
 
-                sf::Event event;
-                while (window.pollEvent(event))
-                {
-                if (event.type == sf::Event::Closed)
+    // Spawn new asteroids
+    for (int i = 0; i < maxAsteroids; ++i) {
+        float radius = 30 + std::rand() % 20;
+        sf::Vector2f position(std::rand() % WINDOW_WIDTH, std::rand() % WINDOW_HEIGHT);
+        sf::Vector2f velocity((std::rand() % 200 - 100) / 100.0f * asteroidSpeed,
+                              (std::rand() % 200 - 100) / 100.0f * asteroidSpeed);
+        asteroids.emplace_back(radius, position, velocity);
+    }
+}
+
+int main() {
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+    // Create window
+    sf::RenderWindow window({WINDOW_WIDTH, WINDOW_HEIGHT}, "Asteroids");
+    window.setFramerateLimit(144);
+
+    // Initialize spaceship
+    Spaceship spaceship;
+
+    // Initialize bullets and asteroids
+    std::vector<Bullet> bullets;
+    sf::Clock bulletClock;
+    float bulletDelay = 0.5f;
+    float bulletSpeed = 900.0f;
+
+    std::vector<Asteroid> asteroids;
+    const int maxAsteroids = 10;
+    const float asteroidSpeed = 100.0f;
+
+    resetGame(spaceship, bullets, asteroids, maxAsteroids, asteroidSpeed);
+
+    // Initialize font and game over text
+    sf::Font font;
+    if (!font.loadFromFile("../assets/OpenSans-VariableFont_wdth,wght.ttf")) {
+        std::cerr << "Error loading font\n";
+        return -1;
+    }
+
+    sf::Text gameOverText("Game Over\nPress Enter to Play Again\nPress Escape to Quit", font, 50);
+    gameOverText.setFillColor(sf::Color::White);
+    gameOverText.setPosition(WINDOW_WIDTH / 2 - gameOverText.getGlobalBounds().width / 2, WINDOW_HEIGHT / 2 - 100);
+
+    sf::Clock clock;
+    GameState gameState = PLAYING;
+
+    // Main game loop
+    while (window.isOpen()) {
+        sf::Time deltaTime = clock.restart();
+        float seconds = deltaTime.asSeconds();
+
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+
+            if (gameState == GAME_OVER) {
+                if (event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Enter) {
+                        // Restart the game
+                        resetGame(spaceship, bullets, asteroids, maxAsteroids, asteroidSpeed);
+                        gameState = PLAYING;
+                    } else if (event.key.code == sf::Keyboard::Escape) {
                         window.close();
-                } // Spaceship movement
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-                {
-                        float rad = spaceship.getRotation() * 3.14159265f / 180.f;
-                        float accelX = std::cos(rad) * acceleration;
-                        float accelY = std::sin(rad) * acceleration;
-
-                        speed += acceleration * seconds;
-
-                        spaceship.move(accelX * seconds, accelY * seconds);
-
-                        if (speed > maxSpeed) speed = maxSpeed;
+                    }
                 }
-                else
-                {
-                        speed *= friction;
-                        float rad = spaceship.getRotation() * 3.14159265f / 180.f;
-                        float accelX = std::cos(rad) *speed;
-                        float accelY = std::sin(rad) *speed;
-                        spaceship.move(accelX * seconds, accelY * seconds);
-                }
-
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-                { 
-                        spaceship.rotate(-rotationSpeed * seconds);
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) 
-                {
-                        spaceship.rotate(rotationSpeed * seconds);
-                }
-                // Shooting logic
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && bulletClock.getElapsedTime() > sf::seconds(bulletDelay)) 
-                {
-                        sf::CircleShape bullet(5);
-                        bullet.setFillColor(sf::Color::White);
-
-                        // Set the initial position of the bullet to the tip of the ship
-                        sf::Vector2f shipTipPosition = spaceship.getTransform().transformPoint(spaceship.getPoint(1));
-                        bullet.setPosition(shipTipPosition);
-
-                        bullets.push_back(bullet);
-                        bulletAngles.push_back(spaceship.getRotation());
-
-                        // Reset the bullet count when it reaches the end of the vector
-                        if (++bulletCount >= bullets.size()) bulletCount = 0;
-                
-                        // Reset the bullet clock
-                        bulletClock.restart();
-                }
-                if(spaceship.getPosition().x<0)
-                {
-                    
-                       spaceship.setPosition(1920,spaceship.getPosition().y);
-                }
-                if(spaceship.getPosition().x>1920) 
-                {
-                 spaceship.setPosition(0,spaceship.getPosition().y);
-                }
-               if(spaceship.getPosition().y>1080){
-                spaceship.setPosition(spaceship.getPosition().x,0);
-               } 
-                 if(spaceship.getPosition().y<0){
-                        spaceship.setPosition(spaceship.getPosition().x,1080);
-                 }
-                window.clear();
-                window.draw(spaceship);
-                
-                //bullet rendering
-                for(sf::CircleShape i : bullets){ 
-                        window.draw(i);
-                }
-                auto bulletIter = bullets.begin();
-                auto angleIter = bulletAngles.begin();
-
-                for (auto iterator = bullets.begin(); iterator != bullets.end();) {
-                float rad = bulletAngles[iterator - bullets.begin()] * 3.14159265f / 180.f;
-                        float accelX = std::cos(rad) * bulletSpeed;
-                        float accelY = std::sin(rad) * bulletSpeed;
-                        iterator->move(accelX * seconds, accelY * seconds);
-
-                        // Check if the bullet is out of bounds
-                        if (iterator->getPosition().x < 0 || iterator->getPosition().x > 1920) {
-                        iterator = bullets.erase(iterator);
-                        bulletAngles.erase(bulletAngles.begin() + (iterator - bullets.begin()));
-                        } 
-                        else {
-                        ++iterator;
-                        }
-                }//end bullet rendering
-                
-                window.display();
-        }     
-        return 0;
+            }
         }
-        
+
+        if (gameState == PLAYING) {
+            // Spaceship controls
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) spaceship.rotateLeft(seconds);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) spaceship.rotateRight(seconds);
+            spaceship.move(seconds);
+            spaceship.wrapAroundEdges(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+            // Shooting bullets
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && bulletClock.getElapsedTime() > sf::seconds(bulletDelay)) {
+                sf::Vector2f shipTip = spaceship.getShape().getTransform().transformPoint(spaceship.getShape().getPoint(1));
+                bullets.emplace_back(shipTip, spaceship.getShape().getRotation());
+                bulletClock.restart();
+            }
+
+            // Bullet movement and collision detection
+            for (auto bulletIt = bullets.begin(); bulletIt != bullets.end(); ) {
+                bulletIt->move(seconds, bulletSpeed);
+
+                bool bulletHit = false;
+                for (auto asteroidIt = asteroids.begin(); asteroidIt != asteroids.end(); ) {
+                    if (bulletIt->getShape().getGlobalBounds().intersects(asteroidIt->getGlobalBounds())) {
+                        bulletHit = true;
+
+                        // Break asteroid into smaller pieces
+                        if (asteroidIt->getRadius() > 20) {
+                            float newRadius = asteroidIt->getRadius() / 2.0f;
+
+                            for (int i = 0; i < 2; ++i) {
+                                sf::Vector2f position = asteroidIt->getShape().getPosition();
+                                sf::Vector2f velocity((std::rand() % 200 - 100) / 100.0f * asteroidSpeed,
+                                                      (std::rand() % 200 - 100) / 100.0f * asteroidSpeed);
+                                asteroids.emplace_back(newRadius, position, velocity);
+                            }
+                        }
+
+                        asteroidIt = asteroids.erase(asteroidIt);
+                    } else {
+                        ++asteroidIt;
+                    }
+                }
+
+                if (bulletHit || bulletIt->isOutOfBounds(WINDOW_WIDTH, WINDOW_HEIGHT)) {
+                    bulletIt = bullets.erase(bulletIt);
+                } else {
+                    ++bulletIt;
+                }
+            }
+
+            // Asteroid movement
+            for (auto& asteroid : asteroids) {
+                asteroid.move(seconds);
+                asteroid.wrapAroundEdges(WINDOW_WIDTH, WINDOW_HEIGHT);
+            }
+
+            // Check spaceship collision with asteroids
+            for (const auto& asteroid : asteroids) {
+                if (spaceship.getGlobalBounds().intersects(asteroid.getGlobalBounds())) {
+                    gameState = GAME_OVER;
+                    break;
+                }
+            }
+        }
+
+        // Rendering
+        window.clear();
+
+        if (gameState == PLAYING) {
+            window.draw(spaceship.getShape());
+            for (const auto& bullet : bullets) window.draw(bullet.getShape());
+            for (const auto& asteroid : asteroids) window.draw(asteroid.getShape());
+        } else if (gameState == GAME_OVER) {
+            window.draw(gameOverText);
+        }
+
+        window.display();
+    }
+
+    return 0;
+}
