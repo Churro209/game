@@ -13,10 +13,12 @@ constexpr unsigned int WINDOW_WIDTH = 1920;
 constexpr unsigned int WINDOW_HEIGHT = 1080;
 
 enum GameState {
+    MAIN_MENU,
     PLAYING,
     GAME_OVER
 };
 
+// Serial port setup
 std::optional<sp_port*> setupSerial(const char* portName, int baudrate) {
     sp_port* serialPort;
     if (sp_get_port_by_name(portName, &serialPort) != SP_OK) {
@@ -54,16 +56,20 @@ std::string readSerialInput(std::optional<sp_port*>& serialPort) {
     return "";
 }
 
+void displayMenu(sf::RenderWindow& window, sf::Text& loadingText, sf::Text& statusText) {
+    window.clear();
+    window.draw(loadingText);
+    window.draw(statusText);
+    window.display();
+}
+
 void resetGame(Spaceship& spaceship, std::vector<Bullet>& bullets, std::vector<Asteroid>& asteroids, const int maxAsteroids, const float asteroidSpeed) {
-    // Reset spaceship
     spaceship.getShape().setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     spaceship.getShape().setRotation(0);
 
-    // Clear bullets and asteroids
     bullets.clear();
     asteroids.clear();
 
-    // Spawn new asteroids
     for (int i = 0; i < maxAsteroids; ++i) {
         float radius = 30 + std::rand() % 20;
         sf::Vector2f position(std::rand() % WINDOW_WIDTH, std::rand() % WINDOW_HEIGHT);
@@ -79,32 +85,44 @@ int main() {
     sf::RenderWindow window({WINDOW_WIDTH, WINDOW_HEIGHT}, "Asteroids");
     window.setFramerateLimit(60);
 
-    Spaceship spaceship;
-    std::vector<Bullet> bullets;
-    sf::Clock bulletClock;
-    float bulletDelay = 0.5f;
-    float bulletSpeed = 900.0f;
-
-    std::vector<Asteroid> asteroids;
-    const int maxAsteroids = 10;
-    const float asteroidSpeed = 100.0f;
-
-    resetGame(spaceship, bullets, asteroids, maxAsteroids, asteroidSpeed);
-
     sf::Font font;
     if (!font.loadFromFile("../assets/OpenSans-VariableFont_wdth,wght.ttf")) {
         std::cerr << "Error loading font\n";
         return -1;
     }
 
+    sf::Text loadingText("Loading...\nConnecting to Controller", font, 50);
+    loadingText.setFillColor(sf::Color::White);
+    loadingText.setPosition(WINDOW_WIDTH / 2 - loadingText.getGlobalBounds().width / 2, WINDOW_HEIGHT / 2 - 200);
+
+    sf::Text statusText("Controller Status: Not Connected", font, 50);
+    statusText.setFillColor(sf::Color::Red);
+    statusText.setPosition(WINDOW_WIDTH / 2 - statusText.getGlobalBounds().width / 2, WINDOW_HEIGHT / 2);
+
     sf::Text gameOverText("Game Over\nPress Enter to Restart\nPress Escape to Quit", font, 50);
     gameOverText.setFillColor(sf::Color::White);
     gameOverText.setPosition(WINDOW_WIDTH / 2 - gameOverText.getGlobalBounds().width / 2, WINDOW_HEIGHT / 2 - 100);
 
-    std::optional<sp_port*> serialPort = setupSerial("/dev/ttyACM0", 9600);
+    std::optional<sp_port*> serialPort = setupSerial("/dev/tty.usbmodem2103", 9600);
+    if (serialPort) {
+        statusText.setString("Controller Status: Connected");
+        statusText.setFillColor(sf::Color::Green);
+    }
+
+    Spaceship spaceship;
+    std::vector<Bullet> bullets;
+    std::vector<Asteroid> asteroids;
+    sf::Clock bulletClock;
+
+    const float bulletDelay = 0.5f;
+    const float bulletSpeed = 900.0f;
+    const int maxAsteroids = 10;
+    const float asteroidSpeed = 100.0f;
+
+    resetGame(spaceship, bullets, asteroids, maxAsteroids, asteroidSpeed);
 
     sf::Clock clock;
-    GameState gameState = PLAYING;
+    GameState gameState = serialPort ? PLAYING : MAIN_MENU;
 
     while (window.isOpen()) {
         sf::Time deltaTime = clock.restart();
@@ -127,26 +145,35 @@ int main() {
             }
         }
 
+        if (gameState == MAIN_MENU) {
+            displayMenu(window, loadingText, statusText);
+
+            if (serialPort) {
+                gameState = PLAYING;
+            } else {
+                serialPort = setupSerial("/dev/tty.usbmodem2103", 9600);
+                if (serialPort) {
+                    statusText.setString("Controller Status: Connected");
+                    statusText.setFillColor(sf::Color::Green);
+                }
+            }
+        }
+
         if (gameState == PLAYING) {
             std::string serialInput = serialPort ? readSerialInput(serialPort) : "";
 
             // Spaceship movement
             if (serialInput.find("LEFT") != std::string::npos) {
                 spaceship.rotateLeft(seconds);
-            } else if (serialInput.find("RIGHT") != std::string::npos) {
+            }
+            if (serialInput.find("RIGHT") != std::string::npos) {
                 spaceship.rotateRight(seconds);
-            } else {
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) spaceship.rotateLeft(seconds);
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) spaceship.rotateRight(seconds);
             }
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-                spaceship.move(seconds);
-            }
             spaceship.wrapAroundEdges(WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // Shooting bullets
-            if ((serialInput.find("SHOOT") != std::string::npos || sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) &&
+            if (serialInput.find("SHOOT") != std::string::npos &&
                 bulletClock.getElapsedTime() > sf::seconds(bulletDelay)) {
                 sf::Vector2f shipTip = spaceship.getTipPosition();
                 bullets.emplace_back(shipTip, spaceship.getRotation());
