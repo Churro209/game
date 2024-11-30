@@ -44,16 +44,16 @@ std::optional<sp_port*> setupSerial(const char* portName, int baudrate) {
     return serialPort;
 }
 
-std::string readSerialInput(std::optional<sp_port*>& serialPort) {
+// Read serial input as a single byte
+std::optional<uint8_t> readSerialInput(std::optional<sp_port*>& serialPort) {
     if (serialPort) {
-        char buffer[16];
-        int bytesRead = sp_nonblocking_read(*serialPort, buffer, sizeof(buffer) - 1);
-        if (bytesRead > 0) {
-            buffer[bytesRead] = '\0'; // Null-terminate the string
-            return std::string(buffer);
+        uint8_t buffer;
+        int bytesRead = sp_nonblocking_read(*serialPort, &buffer, 1);
+        if (bytesRead == 1) {
+            return buffer;
         }
     }
-    return "";
+    return std::nullopt;
 }
 
 void displayMenu(sf::RenderWindow& window, sf::Text& loadingText, sf::Text& statusText) {
@@ -122,6 +122,9 @@ int main() {
     resetGame(spaceship, bullets, asteroids, maxAsteroids, asteroidSpeed);
 
     sf::Clock clock;
+    sf::Clock actionClock;
+    const float actionInterval = 0.05f; // Minimum interval between actions (50ms)
+
     GameState gameState = serialPort ? PLAYING : MAIN_MENU;
 
     while (window.isOpen()) {
@@ -160,27 +163,43 @@ int main() {
         }
 
         if (gameState == PLAYING) {
-            std::string serialInput = serialPort ? readSerialInput(serialPort) : "";
+            if (serialPort) {
+                auto serialInputOpt = readSerialInput(serialPort);
 
-            // Spaceship movement
-            if (serialInput.find("LEFT") != std::string::npos) {
-                spaceship.rotateLeft(seconds);
-            }
-            if (serialInput.find("RIGHT") != std::string::npos) {
-                spaceship.rotateRight(seconds);
+                while (serialInputOpt.has_value()) {
+                    uint8_t serialInput = serialInputOpt.value();
+                    bool rotateLeft = (serialInput == 0x0E);
+                    bool moveForward = (serialInput == 0x0D);
+                    bool rotateRight = (serialInput == 0x0B);
+                    bool shoot = (serialInput == 0x07);
+
+                    // Handle movement and rotation
+                    if (actionClock.getElapsedTime().asSeconds() > actionInterval) {
+                        if (rotateLeft && !rotateRight) {
+                            spaceship.rotateLeft(seconds);
+                        }
+                        if (rotateRight && !rotateLeft) {
+                            spaceship.rotateRight(seconds);
+                        }
+                        if (moveForward) {
+                            spaceship.move(seconds);
+                        }
+                        actionClock.restart();
+                    }
+
+                    // Handle shooting independently
+                    if (shoot && bulletClock.getElapsedTime() > sf::seconds(bulletDelay)) {
+                        sf::Vector2f shipTip = spaceship.getTipPosition();
+                        bullets.emplace_back(shipTip, spaceship.getRotation());
+                        bulletClock.restart();
+                    }
+
+                    serialInputOpt = readSerialInput(serialPort);
+                }
             }
 
             spaceship.wrapAroundEdges(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-            // Shooting bullets
-            if (serialInput.find("SHOOT") != std::string::npos &&
-                bulletClock.getElapsedTime() > sf::seconds(bulletDelay)) {
-                sf::Vector2f shipTip = spaceship.getTipPosition();
-                bullets.emplace_back(shipTip, spaceship.getRotation());
-                bulletClock.restart();
-            }
-
-            // Update bullets
             for (auto& bullet : bullets) {
                 bullet.move(seconds, bulletSpeed);
             }
@@ -188,13 +207,11 @@ int main() {
                 return bullet.isOutOfBounds(WINDOW_WIDTH, WINDOW_HEIGHT);
             }), bullets.end());
 
-            // Update asteroids
             for (auto& asteroid : asteroids) {
                 asteroid.move(seconds);
                 asteroid.wrapAroundEdges(WINDOW_WIDTH, WINDOW_HEIGHT);
             }
 
-            // Check collisions
             for (auto bulletIt = bullets.begin(); bulletIt != bullets.end();) {
                 bool bulletHit = false;
 

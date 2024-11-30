@@ -5,7 +5,7 @@
 constexpr float PI = 3.14159265f;
 
 Spaceship::Spaceship()
-    : speed(0), acceleration(500.0f), friction(0.99f), maxSpeed(600.0f), rotationSpeed(200.0f)
+    : speed(0), acceleration(500.0f), friction(0.99f), maxSpeed(600.0f), rotationSpeed(250.0f)
 {
     shape.setPointCount(4);
     shape.setPoint(0, sf::Vector2f(-10, 20));
@@ -17,7 +17,6 @@ Spaceship::Spaceship()
 }
 
 void Spaceship::move(float deltaTime) {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
         float rad = shape.getRotation() * PI / 180.f;
         sf::Vector2f direction(std::cos(rad), std::sin(rad));
 
@@ -26,12 +25,11 @@ void Spaceship::move(float deltaTime) {
             speed = maxSpeed;
 
         shape.move(direction * speed * deltaTime);
-    } else {
         speed *= friction;
         if (std::abs(speed) < 0.01f) // Stop completely when very slow
             speed = 0;
     }
-}
+
 
 void Spaceship::rotateLeft(float deltaTime) {
     shape.rotate(-rotationSpeed * deltaTime);
