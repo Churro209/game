@@ -1,0 +1,2 @@
+../Core/Src/ADC.c:3:6:ADC1_Init_SingleChannel_PA1	24	static
+../Core/Src/ADC.c:48:10:ADC1_Read_SingleChannel	4	static

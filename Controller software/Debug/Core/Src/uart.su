@@ -1,0 +1,7 @@
+../Drivers/CMSIS/Include/core_cm4.h:1679:22:__NVIC_EnableIRQ	16	static,ignoring_inline_asm
+../Drivers/CMSIS/Include/core_cm4.h:1809:22:__NVIC_SetPriority	16	static
+../Core/Src/uart.c:16:6:UART2_Init	8	static
+../Core/Src/uart.c:31:6:UART2_GPIO_Init	4	static
+../Core/Src/uart.c:44:6:USART_Init	16	static
+../Core/Src/uart.c:63:6:USART_StartTransmission	16	static
+../Core/Src/uart.c:75:6:USART2_IRQHandler	4	static

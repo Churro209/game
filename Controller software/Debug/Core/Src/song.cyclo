@@ -1,0 +1,3 @@
+../Core/Src/song.c:37:6:configureSpeak	1
+../Core/Src/song.c:45:6:playnote	2
+../Core/Src/song.c:54:6:playsong	2
