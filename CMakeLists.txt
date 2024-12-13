@@ -9,16 +9,16 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 # Include SFML via FetchContent
 include(FetchContent)
-FetchContent_Declare(SFML
+FetchContent_Declare(
+    SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
-    GIT_TAG 2.6.x)
+    GIT_TAG 2.6.x
+)
 FetchContent_MakeAvailable(SFML)
 
 # Add include directories for headers
 include_directories(${CMAKE_SOURCE_DIR}/include)
-
 include_directories(${CMAKE_SOURCE_DIR}/src)
-
 
 # Add source files
 set(SOURCES
@@ -34,7 +34,8 @@ add_executable(Asteroids_Run ${SOURCES})
 # Copy assets folder to build directory
 add_custom_command(TARGET Asteroids_Run POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:Asteroids_Run>/../assets)
+    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:Asteroids_Run>/../assets
+)
 
 # Link SFML libraries
 target_include_directories(Asteroids_Run PRIVATE ${sfml_SOURCE_DIR}/include)
@@ -46,8 +47,10 @@ target_compile_features(Asteroids_Run PRIVATE cxx_std_17)
 # Install executable
 install(TARGETS Asteroids_Run)
 
-# Build libserialport during CMake
+# Add libserialport
 set(LIBSERIALPORT_DIR ${CMAKE_SOURCE_DIR}/external/libserialport)
+
+# Ensure libserialport is built
 add_custom_target(build_libserialport ALL
     COMMAND ./autogen.sh
     COMMAND ./configure
@@ -58,7 +61,13 @@ add_custom_target(build_libserialport ALL
 # Add include and library paths for libserialport
 target_include_directories(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR})
 target_link_directories(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR}/.libs)
+target_link_libraries(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR}/.libs/libserialport.a)
 
-# Link libserialport to your project
-add_dependencies(Asteroids_Run build_libserialport)
-target_link_libraries(Asteroids_Run PRIVATE serialport)
+# Use macOS system OpenAL framework
+find_library(OPENAL_FRAMEWORK OpenAL)
+if(OPENAL_FRAMEWORK)
+    message(STATUS "Using macOS system OpenAL framework: ${OPENAL_FRAMEWORK}")
+    target_link_libraries(Asteroids_Run PRIVATE ${OPENAL_FRAMEWORK})
+else()
+    message(FATAL_ERROR "OpenAL framework not found on macOS.")
+endif()

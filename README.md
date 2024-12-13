@@ -32,13 +32,27 @@ The controller was prototyped on a breadboard and communicates with the game via
    git clone https://github.com/Churro209/game.git
 
 
-2. Navigate to Project directory
-cd gametest-controller
+2. Navigate to Project directory, and go to "game" directory 
+    ```bash
+    cd game
 
-3.Build the game:
-go into build directory 
--cd build
-make. 
+3. make and enter build directory
+    ```bash 
+    mkdir build
+    cd build
+
+4. run cmake to build game while in build directory:
+    ```bash
+    cmake ..
+
+5. once build files are made compile project(still in build directory):
+    ```bash
+    make
+    
+6. cd into bin directory and run the game
+    ```bash
+    cd bin
+    ./Asteroids_Run 
 
 
 
