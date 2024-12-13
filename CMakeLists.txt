@@ -16,6 +16,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(SFML)
 
+# Add include directories for headers
+include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 # Add source files
 set(SOURCES
     src/main.cpp
@@ -23,8 +27,6 @@ set(SOURCES
     src/Bullet.cpp
     src/Asteroid.cpp
 )
-
-
 
 # Add executable target
 add_executable(Asteroids_Run ${SOURCES})
@@ -48,12 +50,18 @@ install(TARGETS Asteroids_Run)
 # Add libserialport
 set(LIBSERIALPORT_DIR ${CMAKE_SOURCE_DIR}/external/libserialport)
 
-# Include libserialport headers
-target_include_directories(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR})
+# Ensure libserialport is built
+add_custom_target(build_libserialport ALL
+    COMMAND ./autogen.sh
+    COMMAND ./configure
+    COMMAND make
+    WORKING_DIRECTORY ${LIBSERIALPORT_DIR}
+)
 
-# Link pre-built libserialport library
+# Add include and library paths for libserialport
+target_include_directories(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR})
 target_link_directories(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR}/.libs)
-target_link_libraries(Asteroids_Run PRIVATE serialport)
+target_link_libraries(Asteroids_Run PRIVATE ${LIBSERIALPORT_DIR}/.libs/libserialport.a)
 
 # Use macOS system OpenAL framework
 find_library(OPENAL_FRAMEWORK OpenAL)
@@ -63,5 +71,3 @@ if(OPENAL_FRAMEWORK)
 else()
     message(FATAL_ERROR "OpenAL framework not found on macOS.")
 endif()
-# Add include directories for project headers
-target_include_directories(Asteroids_Run PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
