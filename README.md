@@ -1,3 +1,47 @@
+# Custom Video Game and Controller
+
+## Overview
+This project is a 2D video game developed in C++ with a custom game controller built using an STM32 microcontroller. The game features [briefly describe gameplay, e.g., "basic player movement, enemy interaction, and scoring mechanisms"], showcasing both software and hardware integration.
+
+The controller was prototyped on a breadboard and communicates with the game via USB, allowing for real-time interaction.
+
+---
+
+## Features
+- **2D Gameplay Mechanics**: Implemented player movement, collision detection
+- **Custom Game Controller**:
+  - Built with STM32 microcontroller programmed in C.
+  - Prototyped on a breadboard for rapid development.
+  - USB communication for seamless integration with the game.
+
+- **Cross-Platform Compatibility**: Game can run on [list platforms, e.g., "Windows and Linux"].
+
+---
+
+## Technologies Used
+- **Programming Languages**: C++ (game development), C (controller firmware).
+- **Hardware**: STM32 microcontroller.
+- **Game Development Libraries**:  SFML.
+- **Prototyping**: Breadboard for hardware testing.
+
+---
+
+## How to Run the Game
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Churro209/game.git
+
+
+2. Navigate to Project directory
+cd gametest-controller
+
+3.Build the game:
+go into build directory 
+-cd build
+make. 
+
+
+
 # CMake SFML Project Template
 
 This repository template should allow for a fast and hassle-free kick start of your next SFML project using CMake.
