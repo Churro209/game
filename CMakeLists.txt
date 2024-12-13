@@ -6,6 +6,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Build shared libraries option
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+# Ensure submodules are initialized
+find_package(Git REQUIRED)
+
+# Check if the submodule folder is populated
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/external/libserialport/libserialport.h)
+    message(STATUS "Submodule 'libserialport' not found. Initializing...")
+    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    RESULT_VARIABLE GIT_SUBMOD_RESULT)
+    if(NOT GIT_SUBMOD_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to initialize submodules. Please run:\n"
+                            "  git submodule update --init --recursive")
+    endif()
+else()
+    message(STATUS "Submodule 'libserialport' is already initialized.")
+endif()
+
 
 # Include SFML via FetchContent
 include(FetchContent)
