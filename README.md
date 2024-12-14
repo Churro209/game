@@ -14,7 +14,7 @@ The controller was prototyped on a breadboard and communicates with the game via
   - Prototyped on a breadboard for rapid development.
   - USB communication for seamless integration with the game.
 
-- **Cross-Platform Compatibility**: Game can run on [list platforms, e.g., "Windows and Linux"].
+- **Cross-Platform Compatibility**: Game can run on Mac OS.
 
 ---
 
@@ -25,34 +25,68 @@ The controller was prototyped on a breadboard and communicates with the game via
 - **Prototyping**: Breadboard for hardware testing.
 
 ---
+Controller configuration
+The game supports a custom controller built using an STM32 microcontroller.
+ Follow the steps below to set up and configure the controller.
 
-## How to Run the Game
+Hardware:
+An STM32 microcontroller.
+A USB cable for connecting the controller to your computer.
+4 buttons
+4 100nF capacitors
+
+![Hardware configuration ](assets/hardware.png)
+note: the pins on breadboard are:  PB0-PB3
+
+
+
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/Churro209/game.git
 
+2. Plug the controller into your macOS computer using the USB cable.
 
-2. Navigate to Project directory, and go to "game" directory 
+3. upload firmware onto microcontroller:
+    Easiest way is to move the "Controller software" folder into Stm32CubeIDE 
+    and then build->debug
+
+
+
+4. After uploading firmware onto microcontroller go back to terminal to identify the Serial Port name the 
+microcontroller is connected to:
+    ```bash
+    ls /dev/tty.*
+save this value. 
+5. navigate to project directory->src-> main.cpp
+    and change name from "/dev/tty.usbmodem2103" to 
+    port found in step 4. See image for reference. 
+    ![Line to change port name](assets/image.png)
+
+
+6. Navigate to Project directory, and go to "game" directory 
     ```bash
     cd game
 
-3. make and enter build directory
+7. make and enter build directory
     ```bash 
     mkdir build
     cd build
 
-4. run cmake to build game while in build directory:
+8. run cmake to build game while in build directory:
     ```bash
     cmake ..
 
-5. once build files are made compile project(still in build directory):
+9. once build files are made compile project(still in build directory):
     ```bash
     make
     
-6. cd into bin directory and run the game
+10. cd into bin directory and run the game
     ```bash
     cd bin
     ./Asteroids_Run 
+
+
 
 
 
