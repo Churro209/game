@@ -27,16 +27,16 @@ The controller was prototyped on a breadboard and communicates with the game via
 
 ---
 ## Controller configuration
-- The game supports a custom controller built using an STM32 microcontroller. Follow the steps below to set up and configure the controller.
+The game supports a custom controller built using an STM32 microcontroller. Follow the steps below to set up and configure the controller.
 
 - **Hardware**:
- -An STM32 microcontroller.
- -A USB cable for connecting the controller to your computer.
- -4 buttons.
- -4 100nF capacitors
+    -An STM32 microcontroller.
+    -A USB cable for connecting the controller to your computer.
+    -4 buttons.
+    -4 100nF capacitors
 
-![Hardware configuration ](assets/hardware.png)
-note: the actual pins used are PB0-PB3 
+    ![Hardware configuration ](assets/hardware.png)
+    note: the actual pins used are PB0-PB3 
 ---
 
 1. Clone the repository:
