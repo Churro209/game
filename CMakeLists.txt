@@ -55,7 +55,7 @@ set(SOURCES
 # Add executable target
 add_executable(Asteroids_Run ${SOURCES})
 
-# Ensure Asteroids_Run depends on libserialport
+# Add dependency for Asteroids_Run
 add_dependencies(Asteroids_Run build_libserialport)
 
 # Copy assets folder to build directory
@@ -87,5 +87,4 @@ if(OPENAL_FRAMEWORK)
 else()
     message(FATAL_ERROR "OpenAL framework not found on macOS.")
 endif()
-# Add include directories for headers
 target_include_directories(Asteroids_Run PRIVATE ${CMAKE_SOURCE_DIR}/include)
