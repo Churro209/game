@@ -1,7 +1,8 @@
 # Custom Video Game and Controller
 
 ## Overview
-This project is a 2D video game developed in C++ with a custom game controller built using an STM32 microcontroller. The game features [briefly describe gameplay, e.g., "basic player movement, enemy interaction, and scoring mechanisms"], showcasing both software and hardware integration.
+This project is a 2D video game developed in C++ with a custom game controller built using an STM32 microcontroller. The game is a remake of the 
+classic arcade game known as Asteroids. 
 
 The controller was prototyped on a breadboard and communicates with the game via USB, allowing for real-time interaction.
 
@@ -36,9 +37,7 @@ A USB cable for connecting the controller to your computer.
 4 100nF capacitors
 
 ![Hardware configuration ](assets/hardware.png)
-note: the pins on breadboard are:  PB0-PB3
-
-
+note: the actual pins used are PB0-PB3 
 
 
 1. Clone the repository:
@@ -57,7 +56,9 @@ note: the pins on breadboard are:  PB0-PB3
 microcontroller is connected to:
     ```bash
     ls /dev/tty.*
+
 save this value. 
+
 5. navigate to project directory->src-> main.cpp
     and change name from "/dev/tty.usbmodem2103" to 
     port found in step 4. See image for reference. 
@@ -88,7 +89,7 @@ save this value.
 
 
 
-
+---
 
 # CMake SFML Project Template
 
