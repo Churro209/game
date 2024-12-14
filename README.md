@@ -39,7 +39,7 @@ A USB cable for connecting the controller to your computer.
 ![Hardware configuration ](assets/hardware.png)
 note: the actual pins used are PB0-PB3 
 
-
+---
 1. Clone the repository:
    ```bash
    git clone https://github.com/Churro209/game.git
