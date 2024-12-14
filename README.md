@@ -1,44 +1,45 @@
-# Custom Video Game and Controller
+# **Custom Video Game and Controller**
 
-## Overview
-This project is a 2D video game developed in C++ with a custom game controller built using an STM32 microcontroller. The game is a remake of the 
-classic arcade game known as Asteroids. 
-
-The controller was prototyped on a breadboard and communicates with the game via USB, allowing for real-time interaction.
+## **Overview**
+This project is a 2D video game developed in C++ with a custom game controller built using an STM32 microcontroller. The game is a remake of the classic arcade game *Asteroids*. The custom controller, prototyped on a breadboard, communicates with the game via USB, allowing for real-time interaction.
 
 ---
 
-## Features
-- **2D Gameplay Mechanics**: Implemented player movement, collision detection
-- **Custom Game Controller**:
-  - Built with STM32 microcontroller programmed in C.
+## **Features**
+- **Gameplay**: 2D mechanics with player movement and collision detection.
+- **Custom Controller**:
+  - Built with an STM32 microcontroller programmed in C.
   - Prototyped on a breadboard for rapid development.
   - USB communication for seamless integration with the game.
-
-- **Cross-Platform Compatibility**: Game can run on Mac OS.
+- **Platform Compatibility**: Currently runs on macOS (Apple Silicon and Intel chips).
 
 ---
 
-## Technologies Used
-- **Programming Languages**: C++ (game development), C (controller firmware).
+## **Technologies Used**
+- **Languages**: C++ (game development), C (controller firmware).
+- **Libraries**: SFML for game development.
 - **Hardware**: STM32 microcontroller.
-- **Game Development Libraries**:  SFML.
 - **Prototyping**: Breadboard for hardware testing.
 
 ---
-## Controller configuration
-The game supports a custom controller built using an STM32 microcontroller. Follow the steps below to set up and configure the controller.
 
-- **Hardware**:
-    -An STM32 microcontroller.
-    -A USB cable for connecting the controller to your computer.
-    -4 buttons.
-    -4 100nF capacitors
+## **Controller Configuration**
 
-    ![Hardware configuration ](assets/hardware.png)
-    note: the actual pins used are PB0-PB3 
+To play the game, you'll need to set up and configure the custom controller.
+
+### **Hardware Requirements**
+- An STM32 microcontroller.
+- A USB cable for connecting the controller to your computer.
+- 4 buttons.
+- 4 100nF capacitors.
+
+![Hardware Configuration](assets/hardware.png)
+
+*Note:* The actual pins used are **PB0-PB3**.
+
 ---
 
+## **Setup Instructions**
 1. Clone the repository:
    ```bash
    git clone https://github.com/Churro209/game.git
